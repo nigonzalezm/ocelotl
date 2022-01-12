@@ -25,7 +25,7 @@ impl Connect {
         let (message, _) = receive_from(&self.socket);
         message
     }
-    pub fn send(self, message: String) {
+    pub fn send(&self, message: String) {
         self.socket.send_to(format!("{}\0", message).as_bytes(), format!("127.0.0.1:{}", self.port)).unwrap();
     }
 }
