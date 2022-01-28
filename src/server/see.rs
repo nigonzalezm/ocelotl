@@ -1,0 +1,108 @@
+extern crate sexp;
+
+use phf::phf_map;
+
+static FLAGS: phf::Map<&'static str, (f64, f64)> = phf_map! {
+    "f t 0"    => (  0.0f64, -39.0f64),
+    "f t r 10" => ( 10.0f64, -39.0f64),
+    "f t r 20" => ( 20.0f64, -39.0f64),
+    "f t r 30" => ( 30.0f64, -39.0f64),
+    "f t r 40" => ( 40.0f64, -39.0f64),
+    "f t r 50" => ( 50.0f64, -39.0f64),
+    "f r t 30" => ( 57.5f64, -30.0f64),
+    "f r t 20" => ( 57.5f64, -20.0f64),
+    "f r t 10" => ( 57.5f64, -10.0f64),
+    "f r 0"    => ( 57.5f64,   0.0f64),
+    "f r b 10" => ( 57.5f64,  10.0f64),
+    "f r b 20" => ( 57.5f64,  20.0f64),
+    "f r b 30" => ( 57.5f64,  30.0f64),
+    "f b r 50" => ( 50.0f64,  39.0f64),
+    "f b r 40" => ( 40.0f64,  39.0f64),
+    "f b r 30" => ( 30.0f64,  39.0f64),
+    "f b r 20" => ( 20.0f64,  39.0f64),
+    "f b r 10" => ( 10.0f64,  39.0f64),
+    "f b 0"    => (  0.0f64,  39.0f64),
+    "f b l 10" => (-10.0f64,  39.0f64),
+    "f b l 20" => (-20.0f64,  39.0f64),
+    "f b l 30" => (-30.0f64,  39.0f64),
+    "f b l 40" => (-40.0f64,  39.0f64),
+    "f b l 50" => (-50.0f64,  39.0f64),
+    "f l b 30" => (-57.5f64,  30.0f64),
+    "f l b 20" => (-57.5f64,  20.0f64),
+    "f l b 10" => (-57.5f64,  10.0f64),
+    "f l 0"    => (-57.5f64,   0.0f64),
+    "f l t 10" => (-57.5f64, -10.0f64),
+    "f l t 20" => (-57.5f64, -20.0f64),
+    "f l t 30" => (-57.5f64, -30.0f64),
+    "f t l 50" => (-50.0f64, -39.0f64),
+    "f t l 40" => (-40.0f64, -39.0f64),
+    "f t l 30" => (-30.0f64, -39.0f64),
+    "f t l 20" => (-20.0f64, -39.0f64),
+    "f t l 10" => (-10.0f64, -39.0f64),
+    "f c"      => (  0.0f64,   0.0f64),
+	"f c t"    => (  0.0f64, -34.0f64),
+	"f r t"    => ( 52.5f64, -34.0f64),
+	"f r b"    => ( 52.5f64,  34.0f64),
+	"f c b"    => (  0.0f64,  34.0f64),
+	"f l b"    => (-52.5f64,  34.0f64),
+	"f l t"    => (-52.5f64, -34.0f64),
+	"g l"      => (-52.5f64,   0.0f64),
+	"f g l t"  => (-52.5f64,  -7.0f64),
+	"f p l t"  => (-36.0f64, -20.0f64),
+	"f p l c"  => (-36.0f64,   0.0f64),
+	"f p l b"  => (-36.0f64,  20.0f64),
+	"f g l b"  => (-52.5f64,   7.0f64),
+	"g r"      => ( 52.5f64,   0.0f64),
+	"f g r t"  => ( 52.5f64,  -7.0f64),
+	"f p r t"  => ( 36.0f64, -20.0f64),
+	"f p r c"  => ( 36.0f64,   0.0f64),
+	"f p r b"  => ( 36.0f64,  20.0f64),
+	"f g r b"  => ( 52.5f64,   7.0f64)
+};
+
+pub struct Flag {
+    pub x: f64,
+    pub y: f64,
+    pub distance: f64,
+    pub direction: i64
+}
+
+pub struct See {
+    pub flags: Vec<Flag>
+}
+
+impl See {
+    pub fn build(string: String) -> See {
+        let mut flags: Vec<Flag> = Vec::new();
+        let tree = sexp::parse(&string).unwrap();
+        if let sexp::Sexp::List(elements) = tree {
+            for element in &elements[2..] {
+                if let sexp::Sexp::List(entry) = element {
+                    if let sexp::Sexp::List(object_name) = &entry[0] {
+                        if let sexp::Sexp::Atom(sexp::Atom::S(ref object_type)) = object_name[0] {
+                            if object_type == "f" && object_name.len() > 1 && entry.len() > 2 {
+                                let mut name_vec: Vec<String> = Vec::new();
+                                for name_element in object_name {
+                                    if let sexp::Sexp::Atom(sexp::Atom::S(ref value)) = name_element {
+                                        name_vec.push(value.to_string());
+                                    }
+                                    if let sexp::Sexp::Atom(sexp::Atom::I(value)) = name_element {
+                                        name_vec.push(value.to_string());
+                                    }
+                                }
+                                if let sexp::Sexp::Atom(sexp::Atom::F(distance)) = entry[1] {
+                                    if let sexp::Sexp::Atom(sexp::Atom::I(direction)) = entry[2] { // should be detected always as f64?
+                                        let name = name_vec.join(" ");
+                                        let (x, y) = FLAGS.get(&name).unwrap();
+                                        flags.push(Flag { x: *x, y: *y, distance, direction });
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        See { flags }
+    }
+}
