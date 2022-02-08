@@ -106,3 +106,17 @@ impl See {
         See { flags }
     }
 }
+
+#[cfg(test)]
+mod tests {
+
+    use super::*;
+
+    #[test]
+    fn test_see_build() {
+        let message = "(see 0 ((f c) 10 0 0 0) ((f r t) 70.8 -29) ((f r b) 70.8 29) ((f g r b) 62.8 6) ((g r) 62.8 0) ((f g r t) 62.8 -6) ((f p r b) 50.4 24) ((f p r c) 46.1 0) ((f p r t) 50.4 -24) ((f r 0) 67.4 0) ((f r t 10) 68 -8) ((f r t 20) 70.1 -17) ((f r t 30) 73.7 -24) ((f r b 10) 68 8) ((f r b 20) 70.1 17) ((f r b 30) 73.7 24) ((b) 10 0 -0 0) ((l r) 62.8 90))";
+        let see = See::build(message.to_string());
+        assert_eq!(12, see.flags.len());
+    }
+
+}
