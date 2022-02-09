@@ -18,13 +18,10 @@ fn main() {
     let connect = Arc::new(Connect::connect());
     let _ = ServerParam::build(connect.receive());
     let player_param = PlayerParam::build(connect.receive());
-    let mut player_types = 0;
+    let mut player_types: Vec<PlayerType> = Vec::new();
     loop {
-        let _player_type = PlayerType::build(connect.receive());
-        player_types = player_types + 1;
-        if player_types == player_param.player_types {
-            break;
-        }
+        player_types.push(PlayerType::build(connect.receive()));
+        if player_types.len() as i64 == player_param.player_types { break };
     }
     connect.send("(synch_see)".to_string());
     let _ = connect.receive();
@@ -35,6 +32,6 @@ fn main() {
     let connect_update = Arc::clone(&connect);
     update::update_thread(connect_update, loop_tx, hear_tx);
     hear::hear_thread(game, hear_rx);
-    let loop_handler = loop_mod::loop_thread(game_reader, loop_rx);
+    let loop_handler = loop_mod::loop_thread(game_reader, player_types, loop_rx);
     loop_handler.join();
 }
