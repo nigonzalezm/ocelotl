@@ -1,5 +1,6 @@
 use super::super::game::game::Game;
 use super::super::game::localization::Position;
+use super::super::server::player_type::PlayerType;
 use super::super::server::see::{Flag, See};
 use super::super::server::sense_body::SenseBody;
 use std::sync::{Arc, Mutex};
@@ -8,7 +9,7 @@ use std::thread;
 use std::thread::JoinHandle;
 use std::time::Duration;
 
-pub fn loop_thread(game: Arc<Mutex<Game>>, loop_rx: Receiver<String>) -> JoinHandle<()> {
+pub fn loop_thread(game: Arc<Mutex<Game>>, player_types: Vec<PlayerType>, loop_rx: Receiver<String>) -> JoinHandle<()> {
     let mut last_amount_of_speed = 0.0;
     let mut last_effort = 0.0;
     let mut last_dash_power = 0.0;
@@ -18,6 +19,7 @@ pub fn loop_thread(game: Arc<Mutex<Game>>, loop_rx: Receiver<String>) -> JoinHan
         loop {
             let message = loop_rx.recv().unwrap();
             let sense_body = SenseBody::build(message);
+            let default_player_type = &player_types[0];
             let mut velc = last_amount_of_speed + last_effort * default_player_type.dash_power_rate * last_dash_power;
             if velc > default_player_type.player_speed_max {
                 velc = default_player_type.player_speed_max;
