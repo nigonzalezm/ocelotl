@@ -1,5 +1,6 @@
 mod base;
 mod game;
+mod play;
 mod server;
 
 use base::connect::Connect;
