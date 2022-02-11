@@ -1,5 +1,6 @@
 use super::super::game::game::Game;
 use super::super::game::localization::Position;
+use super::super::play::*;
 use super::super::server::player_type::PlayerType;
 use super::super::server::see::{Flag, See};
 use super::super::server::sense_body::SenseBody;
@@ -25,16 +26,25 @@ pub fn loop_thread(game: Arc<Mutex<Game>>, player_types: Vec<PlayerType>, loop_r
                 velc = default_player_type.player_speed_max;
             }
             let turn = last_turn_moment / (1.0 + default_player_type.inertia_moment * velc);
-            let _position = match loop_rx.recv_timeout(Duration::from_millis(25)) {
+            let (_position, ball) = match loop_rx.recv_timeout(Duration::from_millis(25)) {
                 Ok(message) => {
                     let see = See::build(message);
-                    Position::localize(&position, velc, turn, see.flags)
+                    (Position::localize(&position, velc, turn, see.flags), see.ball)
                 }
                 Err(_) => { // no see message was received after 25 ms
-                    Position::localize(&position, velc, turn, Vec::<Flag>::new())
+                    (Position::localize(&position, velc, turn, Vec::<Flag>::new()), None)
                 }
             };
             position = _position;
+            let play_mode: String = {
+                let game = game.lock().unwrap();
+                (*game).play_mode.to_string()
+            };
+            match play_mode.as_str() {
+                "before_kick_off" => before_kick_off::execute(&position, ball),
+                "play_on" => play_on::execute(&position, ball),
+                _ => { /* do nothing */ }
+            }
             last_amount_of_speed = sense_body.amount_of_speed;
             last_effort = sense_body.effort;
             let simulation_mode: String = {

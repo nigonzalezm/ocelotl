@@ -67,13 +67,36 @@ pub struct Flag {
     pub direction: i64
 }
 
+pub struct Ball {
+    pub distance: f64,
+    pub direction: i64
+}
+
 pub struct See {
-    pub flags: Vec<Flag>
+    pub flags: Vec<Flag>,
+    pub ball: Option<Ball>
+}
+
+fn sexp_as_int(element: &sexp::Sexp) -> i64 {
+    match element {
+        sexp::Sexp::Atom(sexp::Atom::F(float)) => *float as i64,
+        sexp::Sexp::Atom(sexp::Atom::I(int)) => *int,
+        _ => 0
+    }
+}
+
+fn sexp_as_float(element: &sexp::Sexp) -> f64 {
+    match element {
+        sexp::Sexp::Atom(sexp::Atom::F(float)) => *float,
+        sexp::Sexp::Atom(sexp::Atom::I(int)) => *int as f64,
+        _ => 0.0
+    }
 }
 
 impl See {
     pub fn build(string: String) -> See {
         let mut flags: Vec<Flag> = Vec::new();
+        let mut ball: Option<Ball> = None;
         let tree = sexp::parse(&string).unwrap();
         if let sexp::Sexp::List(elements) = tree {
             for element in &elements[2..] {
@@ -90,20 +113,23 @@ impl See {
                                         name_vec.push(value.to_string());
                                     }
                                 }
-                                if let sexp::Sexp::Atom(sexp::Atom::F(distance)) = entry[1] {
-                                    if let sexp::Sexp::Atom(sexp::Atom::I(direction)) = entry[2] { // should be detected always as f64?
-                                        let name = name_vec.join(" ");
-                                        let (x, y) = FLAGS.get(&name).unwrap();
-                                        flags.push(Flag { x: *x, y: *y, distance, direction });
-                                    }
-                                }
+                                let distance = sexp_as_float(&entry[1]);
+                                let direction = sexp_as_int(&entry[2]);
+                                let name = name_vec.join(" ");
+                                let (x, y) = FLAGS.get(&name).unwrap();
+                                flags.push(Flag { x: *x, y: *y, distance, direction });
+                            }
+                            if object_type == "b" && entry.len() > 2 {
+                                let distance = sexp_as_float(&entry[1]);
+                                let direction = sexp_as_int(&entry[2]);
+                                ball = Some(Ball { distance, direction });
                             }
                         }
                     }
                 }
             }
         }
-        See { flags }
+        See { flags, ball }
     }
 }
 
@@ -116,7 +142,8 @@ mod tests {
     fn test_see_build() {
         let message = "(see 0 ((f c) 10 0 0 0) ((f r t) 70.8 -29) ((f r b) 70.8 29) ((f g r b) 62.8 6) ((g r) 62.8 0) ((f g r t) 62.8 -6) ((f p r b) 50.4 24) ((f p r c) 46.1 0) ((f p r t) 50.4 -24) ((f r 0) 67.4 0) ((f r t 10) 68 -8) ((f r t 20) 70.1 -17) ((f r t 30) 73.7 -24) ((f r b 10) 68 8) ((f r b 20) 70.1 17) ((f r b 30) 73.7 24) ((b) 10 0 -0 0) ((l r) 62.8 90))";
         let see = See::build(message.to_string());
-        assert_eq!(12, see.flags.len());
+        assert_eq!(15, see.flags.len());
+        assert_eq!(true, see.ball.is_some());
     }
 
 }
