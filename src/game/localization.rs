@@ -3,6 +3,7 @@ extern crate nalgebra;
 use super::super::server::see::Flag;
 use nalgebra::base::{MatrixXx2, MatrixXx1};
 
+#[derive(Debug)]
 pub struct Position {
     pub x: f64,
     pub y: f64,

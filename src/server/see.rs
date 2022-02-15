@@ -67,6 +67,7 @@ pub struct Flag {
     pub direction: i64
 }
 
+#[derive(Debug)]
 pub struct Ball {
     pub distance: f64,
     pub direction: i64
