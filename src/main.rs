@@ -33,6 +33,6 @@ fn main() {
     let connect_update = Arc::clone(&connect);
     update::update_thread(connect_update, loop_tx, hear_tx);
     hear::hear_thread(game, hear_rx);
-    let loop_handler = loop_mod::loop_thread(game_reader, player_types, loop_rx);
+    let loop_handler = loop_mod::loop_thread(connect, game_reader, player_types, loop_rx);
     loop_handler.join();
 }

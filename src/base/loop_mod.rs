@@ -1,3 +1,4 @@
+use super::super::base::connect::Connect;
 use super::super::game::game::Game;
 use super::super::game::localization::Position;
 use super::super::play::*;
@@ -10,7 +11,7 @@ use std::thread;
 use std::thread::JoinHandle;
 use std::time::Duration;
 
-pub fn loop_thread(game: Arc<Mutex<Game>>, player_types: Vec<PlayerType>, loop_rx: Receiver<String>) -> JoinHandle<()> {
+pub fn loop_thread(connect: Arc<Connect>, game: Arc<Mutex<Game>>, player_types: Vec<PlayerType>, loop_rx: Receiver<String>) -> JoinHandle<()> {
     let mut last_amount_of_speed = 0.0;
     let mut last_effort = 0.0;
     let mut last_dash_power = 0.0;
@@ -41,9 +42,20 @@ pub fn loop_thread(game: Arc<Mutex<Game>>, player_types: Vec<PlayerType>, loop_r
                 (*game).play_mode.to_string()
             };
             match play_mode.as_str() {
-                "before_kick_off" => before_kick_off::execute(&position, ball),
-                "play_on" => play_on::execute(&position, ball),
-                _ => { /* do nothing */ }
+                "before_kick_off" => {
+                    before_kick_off::execute(&connect, &position, ball);
+                    last_dash_power = 0.0;
+                    last_turn_moment = 0.0;
+                },
+                "play_on" => {
+                    let (dash, turn) = play_on::execute(&connect, &position, ball);
+                    last_dash_power = dash;
+                    last_turn_moment = turn;
+                },
+                _ => {
+                    last_dash_power = 0.0;
+                    last_turn_moment = 0.0;
+                }
             }
             last_amount_of_speed = sense_body.amount_of_speed;
             last_effort = sense_body.effort;
