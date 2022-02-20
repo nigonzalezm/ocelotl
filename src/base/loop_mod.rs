@@ -48,7 +48,7 @@ pub fn loop_thread(connect: Arc<Connect>, game: Arc<Mutex<Game>>, player_types: 
                     last_turn_moment = 0.0;
                 },
                 "play_on" => {
-                    let (dash, turn) = play_on::execute(&connect, &position, ball);
+                    let (dash, turn) = play_on::execute(&connect, &position, ball, sense_body.game_time);
                     last_dash_power = dash;
                     last_turn_moment = turn;
                 },
@@ -63,7 +63,7 @@ pub fn loop_thread(connect: Arc<Connect>, game: Arc<Mutex<Game>>, player_types: 
                 let game = game.lock().unwrap();
                 (*game).simulation_mode.to_string()
             };
-            if simulation_mode != "continue" || sense_body.game_time == 6000 {
+            if simulation_mode != "continue" {
                 break
             }
         }

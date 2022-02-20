@@ -3,7 +3,8 @@ use super::super::game::localization::Position;
 use super::super::server::see::Ball;
 use std::sync::Arc;
 
-pub fn execute(connect: &Arc<Connect>, _position: &Position, opt_ball: Option<Ball>) -> (f64, f64) {
+pub fn execute(connect: &Arc<Connect>, position: &Position, opt_ball: Option<Ball>, game_time: i64) -> (f64, f64) {
+    println!("({} ({} {}))", game_time, position.x, position.y);
     match opt_ball {
         Some(ball) => {
             if ball.direction > 20 || ball.direction < -20 {
