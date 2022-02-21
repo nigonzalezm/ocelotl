@@ -4,7 +4,7 @@ use super::super::server::see::Ball;
 use std::sync::Arc;
 
 pub fn execute(connect: &Arc<Connect>, position: &Position, opt_ball: Option<Ball>, game_time: i64) -> (f64, f64) {
-    println!("({} ({} {}))", game_time, position.x, position.y);
+    println!("({} ({} {} {}))", game_time, position.x, position.y, position.body);
     match opt_ball {
         Some(ball) => {
             if ball.direction > 20 || ball.direction < -20 {

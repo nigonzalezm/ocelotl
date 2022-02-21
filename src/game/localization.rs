@@ -10,6 +10,16 @@ pub struct Position {
     pub body: f64
 }
 
+fn angle(x0: f64, y0: f64, x1: f64, y1: f64, offset: f64) -> f64 {
+    let mut direction = (y1 - y0).atan2(x1 - x0).to_degrees() - offset;
+    if direction >= 180.0 {
+        direction -= 360.0;
+    } else if direction < -180.0 {
+        direction += 360.0;
+    }
+    direction
+}
+
 // based on https://www3.nd.edu/~cpoellab/teaching/cse40815/Chapter10.pdf
 fn triangulate(flags: Vec<Flag>) -> Option<Position> {
     let flag0 = flags.get(0).unwrap();
@@ -26,7 +36,23 @@ fn triangulate(flags: Vec<Flag>) -> Option<Position> {
     let b = MatrixXx1::from_iterator(flags.len() - 1, b_elements);
     if let Some(c) = (&a.transpose() * &a).try_inverse() {
         let position = c * a.transpose() * b;
-        Some(Position { x: *position.get(0).unwrap(), y: *position.get(1).unwrap(), body: 0.0 })
+        let x = *position.get(0).unwrap();
+        let y = *position.get(1).unwrap();
+        let mut uxs = 0.0;
+        let mut uys = 0.0;
+        for flag in &flags {
+            let direction = angle(x, y, flag.x, flag.y, 0.0).to_radians();
+            uxs += direction.cos();
+            uys += direction.sin();
+        }
+        let flags_count = flags.len() as f64;
+        let mut body = (uys / flags_count).atan2(uxs / flags_count).to_degrees();
+        if body >= 180.0 {
+            body -= 360.0;
+        } else if body < -180.0 {
+            body += 360.0;
+        }
+        Some(Position { x, y, body })
     } else {
         None
     }
@@ -52,13 +78,7 @@ impl Position {
         ((self.x - x).powi(2) + (self.y - y).powi(2)).sqrt()
     }
     pub fn direction_to(&self, x: f64, y: f64) -> f64 {
-        let mut direction = (y - self.y).atan2(x - self.x).to_degrees() - self.body;
-        if direction >= 180.0 {
-            direction -= 360.0;
-        } else if direction < -180.0 {
-            direction += 360.0;
-        }
-        direction
+        angle(self.x, self.y, x, y, self.body)
     }
     pub fn localize(position: &Position, velc: f64, turn: f64, flags: Vec<Flag>) -> Position {
         if flags.len() > 2 {
