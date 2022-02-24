@@ -95,6 +95,10 @@ fn sexp_as_float(element: &sexp::Sexp) -> f64 {
 }
 
 impl See {
+    pub fn get_flag(flag: String) -> (f64, f64) {
+        let (x, y) = FLAGS.get(&flag).unwrap();
+        (*x, *y)
+    }
     pub fn build(string: String) -> See {
         let mut flags: Vec<Flag> = Vec::new();
         let mut ball: Option<Ball> = None;
@@ -138,6 +142,13 @@ impl See {
 mod tests {
 
     use super::*;
+
+    #[test]
+    fn test_get_flag() {
+        let (x, y) = See::get_flag("g r".to_string());
+        assert_eq!(52.5, x);
+        assert_eq!(0.0, y);
+    }
 
     #[test]
     fn test_see_build() {
