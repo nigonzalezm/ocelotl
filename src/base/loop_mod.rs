@@ -1,5 +1,5 @@
 use super::super::base::connect::Connect;
-use super::super::game::game::Game;
+use super::super::game::game::{Game, PlayMode};
 use super::super::game::localization::Position;
 use super::super::play::*;
 use super::super::server::player_type::PlayerType;
@@ -27,34 +27,30 @@ pub fn loop_thread(connect: Arc<Connect>, game: Arc<Mutex<Game>>, player_types: 
                 velc = default_player_type.player_speed_max;
             }
             let turn = last_turn_moment / (1.0 + default_player_type.inertia_moment * velc);
-            let (_position, ball) = match loop_rx.recv_timeout(Duration::from_millis(25)) {
+            let (_position, see) = match loop_rx.recv_timeout(Duration::from_millis(25)) {
                 Ok(message) => {
                     let see = See::build(message);
-                    (Position::localize(&position, velc, turn, see.flags), see.ball)
+                    (Position::localize(&position, velc, turn, &see.flags), Some(see))
                 }
                 Err(_) => { // no see message was received after 25 ms
-                    (Position::localize(&position, velc, turn, Vec::<Flag>::new()), None)
+                    (Position::localize(&position, velc, turn, &Vec::<Flag>::new()), None)
                 }
             };
             position = _position;
-            let play_mode: String = {
+            let play_mode: PlayMode = {
                 let game = game.lock().unwrap();
-                (*game).play_mode.to_string()
+                (*game).play_mode
             };
-            match play_mode.as_str() {
-                "before_kick_off" => {
-                    before_kick_off::execute(&connect, &position, ball);
+            match play_mode {
+                PlayMode::BeforeKickOff => {
+                    before_kick_off::execute(&connect, &position, see);
                     last_dash_power = 0.0;
                     last_turn_moment = 0.0;
                 },
-                "play_on" => {
-                    let (dash, turn) = play_on::execute(&connect, &position, ball, sense_body.game_time);
+                PlayMode::PlayOn => {
+                    let (dash, turn) = play_on::execute(&connect, &position, see, sense_body.game_time, default_player_type);
                     last_dash_power = dash;
                     last_turn_moment = turn;
-                },
-                _ => {
-                    last_dash_power = 0.0;
-                    last_turn_moment = 0.0;
                 }
             }
             last_amount_of_speed = sense_body.amount_of_speed;

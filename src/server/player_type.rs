@@ -3,7 +3,8 @@ extern crate sexp;
 pub struct PlayerType {
     pub player_speed_max: f64,
     pub dash_power_rate: f64,
-    pub inertia_moment: f64
+    pub inertia_moment: f64,
+    pub kickable_margin: f64
 }
 
 impl PlayerType {
@@ -11,6 +12,7 @@ impl PlayerType {
         let mut player_speed_max = 1.05;
         let mut dash_power_rate = 0.006;
         let mut inertia_moment = 5.0;
+        let mut kickable_margin = 0.7;
         let tree = sexp::parse(&string).unwrap();
         if let sexp::Sexp::List(elements) = tree {
             for element in &elements[1..] {
@@ -31,6 +33,11 @@ impl PlayerType {
                                 inertia_moment = value;
                             }
                         }
+                        if key == "kickable_margin" {
+                            if let sexp::Sexp::Atom(sexp::Atom::F(value)) = entry[1] {
+                                kickable_margin = value;
+                            }
+                        }
                     }
                 }
             }
@@ -38,7 +45,8 @@ impl PlayerType {
         PlayerType { 
             player_speed_max,
             dash_power_rate,
-            inertia_moment
+            inertia_moment,
+            kickable_margin
         }
     }
 }

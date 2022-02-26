@@ -21,7 +21,7 @@ fn angle(x0: f64, y0: f64, x1: f64, y1: f64, offset: f64) -> f64 {
 }
 
 // based on https://www3.nd.edu/~cpoellab/teaching/cse40815/Chapter10.pdf
-fn triangulate(flags: Vec<Flag>) -> Option<Position> {
+fn triangulate(flags: &Vec<Flag>) -> Option<Position> {
     let flag0 = flags.get(0).unwrap();
     let mut a_x_1: Vec<f64> = Vec::new();
     let mut a_x_2: Vec<f64> = Vec::new();
@@ -40,7 +40,7 @@ fn triangulate(flags: Vec<Flag>) -> Option<Position> {
         let y = *position.get(1).unwrap();
         let mut uxs = 0.0;
         let mut uys = 0.0;
-        for flag in &flags {
+        for flag in flags {
             let direction = angle(x, y, flag.x, flag.y, 0.0).to_radians();
             uxs += direction.cos();
             uys += direction.sin();
@@ -80,7 +80,7 @@ impl Position {
     pub fn direction_to(&self, x: f64, y: f64) -> f64 {
         angle(self.x, self.y, x, y, self.body)
     }
-    pub fn localize(position: &Position, velc: f64, turn: f64, flags: Vec<Flag>) -> Position {
+    pub fn localize(position: &Position, velc: f64, turn: f64, flags: &Vec<Flag>) -> Position {
         if flags.len() > 2 {
             if let Some(position) = triangulate(flags) {
                 position
