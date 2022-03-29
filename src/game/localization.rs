@@ -80,6 +80,11 @@ impl Position {
     pub fn direction_to(&self, x: f64, y: f64) -> f64 {
         angle(self.x, self.y, x, y, self.body)
     }
+    pub fn position_from(&self, distance: f64, direction: i64) -> Position {
+        let x = self.x + distance * (direction as f64).to_radians().cos();
+        let y = self.y + distance * (direction as f64).to_radians().sin();
+        Position { x, y, body: 0.0 }
+    }
     pub fn localize(position: &Position, velc: f64, turn: f64, flags: &Vec<Flag>) -> Position {
         if flags.len() > 2 {
             if let Some(position) = triangulate(flags) {
