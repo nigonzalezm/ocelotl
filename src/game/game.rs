@@ -1,6 +1,4 @@
-extern crate queues;
-
-use queues::Queue;
+use std::collections::VecDeque;
 
 #[derive(Copy, Clone)]
 pub enum PlayMode {
@@ -17,7 +15,7 @@ pub enum Command {
 pub struct Game {
     pub play_mode: PlayMode,
     pub simulation_mode: String,
-    pub commands: Queue<Command>
+    pub commands: VecDeque<Command>
 }
 
 impl Game {
@@ -27,7 +25,7 @@ impl Game {
         Game { 
             play_mode, 
             simulation_mode,
-            commands: Queue::<Command>::new()
+            commands: VecDeque::<Command>::new()
         }
     }
 }

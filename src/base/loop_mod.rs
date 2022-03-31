@@ -5,7 +5,6 @@ use super::super::play::*;
 use super::super::server::player_type::PlayerType;
 use super::super::server::see::{Flag, See};
 use super::super::server::sense_body::SenseBody;
-use queues::IsQueue;
 use std::sync::{Arc, Mutex};
 use std::sync::mpsc::Receiver;
 use std::thread;
@@ -40,7 +39,7 @@ pub fn loop_thread(connect: Arc<Connect>, game: Arc<Mutex<Game>>, player_types: 
             position = _position;
             let (play_mode, opt_command): (PlayMode, Option<Command>) = {
                 let mut game = game.lock().unwrap();
-                ((*game).play_mode, (*game).commands.remove().ok())
+                ((*game).play_mode, (*game).commands.pop_front())
             };
             match play_mode {
                 PlayMode::BeforeKickOff => {
@@ -54,7 +53,7 @@ pub fn loop_thread(connect: Arc<Connect>, game: Arc<Mutex<Game>>, player_types: 
                     last_turn_moment = turn;
                     if let Some(command) = next_command {
                         let mut game = game.lock().unwrap();
-                        (*game).commands.add(command);
+                        (*game).commands.push_front(command);
                     }
                 }
             }

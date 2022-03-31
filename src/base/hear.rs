@@ -1,7 +1,6 @@
 extern crate sexp;
 
 use phf::phf_map;
-use queues::IsQueue;
 use super::super::game::game::{Game, PlayMode, Command};
 use std::sync::{Arc, Mutex};
 use std::sync::mpsc::Receiver;
@@ -42,13 +41,13 @@ pub fn hear_thread(game: Arc<Mutex<Game>>, hear_rx: Receiver<String>) {
                                         let x: f64 = tokens[1].parse().unwrap();
                                         let y: f64 = tokens[2].parse().unwrap();
                                         let mut game = game.lock().unwrap();
-                                        (*game).commands.add(Command::MoveTo { x, y });
+                                        (*game).commands.push_back(Command::MoveTo { x, y });
                                     }
                                     "kt" => {
                                         let x: f64 = tokens[1].parse().unwrap();
                                         let y: f64 = tokens[2].parse().unwrap();
                                         let mut game = game.lock().unwrap();
-                                        (*game).commands.add(Command::KickBallTo { x, y });
+                                        (*game).commands.push_back(Command::KickBallTo { x, y });
                                     }
                                     _ => { }
                                 }
