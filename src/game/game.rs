@@ -6,16 +6,24 @@ pub enum PlayMode {
     PlayOn
 }
 
-#[derive(Clone)]
+#[derive(Copy, Clone, Debug)]
 pub enum Command {
     MoveTo { x: f64, y: f64 },
-    KickBallTo { x: f64, y: f64}
+    KickBallTo { x: f64, y: f64},
+    PassBall
+}
+
+#[derive(PartialEq, Copy, Clone, Debug)]
+pub enum Strategy {
+    Clear,
+    Repeat
 }
 
 pub struct Game {
     pub play_mode: PlayMode,
     pub simulation_mode: String,
-    pub commands: VecDeque<Command>
+    pub commands: VecDeque<Command>,
+    pub strategy: Strategy
 }
 
 impl Game {
@@ -25,7 +33,8 @@ impl Game {
         Game { 
             play_mode, 
             simulation_mode,
-            commands: VecDeque::<Command>::new()
+            commands: VecDeque::<Command>::new(),
+            strategy: Strategy::Clear
         }
     }
 }

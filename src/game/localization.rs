@@ -109,7 +109,7 @@ mod tests {
         let message = "(see 0 ((f c) 10 0 0 0) ((f r t) 70.8 -29) ((f r b) 70.8 29) ((f g r b) 62.8 6) ((g r) 62.8 0) ((f g r t) 62.8 -6) ((f p r b) 50.4 24) ((f p r c) 46.1 0) ((f p r t) 50.4 -24) ((f r 0) 67.4 0) ((f r t 10) 68 -8) ((f r t 20) 70.1 -17) ((f r t 30) 73.7 -24) ((f r b 10) 68 8) ((f r b 20) 70.1 17) ((f r b 30) 73.7 24) ((b) 10 0 -0 0) ((l r) 62.8 90))";
         let see = See::build(message.to_string());
         let previous = Position { x: -1.0, y: -1.0, body: -1.0 };
-        let position = Position::localize(&previous, 0.0, 0.0, see.flags);
+        let position = Position::localize(&previous, 0.0, 0.0, &see.flags);
         assert!(position.x > -12.0 && position.x < -8.0);
         assert!(position.y > -1.0 && position.y < 1.0);
         assert_eq!(position.body, 0.0);
@@ -117,7 +117,7 @@ mod tests {
 
     fn test_localize_by_actions() {
         let previous = Position { x: -1.0, y: -1.0, body: -1.0 };
-        let position = Position::localize(&previous, 1.0, 10.0, Vec::<Flag>::new());
+        let position = Position::localize(&previous, 1.0, 10.0, &Vec::<Flag>::new());
         assert_eq!(position.x, 0.0);
         assert_eq!(position.y, 0.0);
         assert_eq!(position.body, 10.0);

@@ -1,5 +1,5 @@
 use super::super::base::connect::Connect;
-use super::super::game::game::{Game, PlayMode, Command};
+use super::super::game::game::{Game, PlayMode, Command, Strategy};
 use super::super::game::localization::Position;
 use super::super::play::*;
 use super::super::server::player_type::PlayerType;
@@ -37,23 +37,34 @@ pub fn loop_thread(connect: Arc<Connect>, game: Arc<Mutex<Game>>, player_types: 
                 }
             };
             position = _position;
-            let (play_mode, opt_command): (PlayMode, Option<Command>) = {
+            let (play_mode, opt_command, strategy): (PlayMode, Option<Command>, Strategy) = {
                 let mut game = game.lock().unwrap();
-                ((*game).play_mode, (*game).commands.pop_front())
+                ((*game).play_mode, (*game).commands.pop_front(), (*game).strategy)
             };
             match play_mode {
                 PlayMode::BeforeKickOff => {
                     before_kick_off::execute(&connect, &position, see);
                     last_dash_power = 0.0;
                     last_turn_moment = 0.0;
+                    if let Some(command) = opt_command {
+                        let mut game = game.lock().unwrap();
+                        (*game).commands.push_front(command);
+                    }
                 },
                 PlayMode::PlayOn => {
-                    let (dash, turn, next_command) = play_on::execute(&connect, &position, see, sense_body.game_time, default_player_type, opt_command);
+                    let (dash, turn, prev_command, next_command) = play_on::execute(&connect, &position, see, sense_body.game_time, default_player_type, opt_command);
                     last_dash_power = dash;
                     last_turn_moment = turn;
                     if let Some(command) = next_command {
                         let mut game = game.lock().unwrap();
                         (*game).commands.push_front(command);
+                    } else {
+                        if let Some(command) = prev_command {
+                            if strategy == Strategy::Repeat {
+                                let mut game = game.lock().unwrap();
+                                (*game).commands.push_back(command);
+                            }
+                        }
                     }
                 }
             }
