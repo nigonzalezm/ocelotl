@@ -1,7 +1,7 @@
 extern crate sexp;
 
 use phf::phf_map;
-use super::super::game::game::{Game, PlayMode, Command, Strategy};
+use super::super::game::game::*;
 use std::sync::{Arc, Mutex};
 use std::sync::mpsc::Receiver;
 use std::thread;
@@ -51,7 +51,7 @@ pub fn hear_thread(game: Arc<Mutex<Game>>, hear_rx: Receiver<String>) {
                                     }
                                     "c/pass" => {
                                         let mut game = game.lock().unwrap();
-                                        (*game).commands.push_back(Command::PassBall);
+                                        (*game).commands.push_back(Command::PassBall { player: Selector::Closest });
                                     }
                                     "s/clear" => {
                                         let mut game = game.lock().unwrap();

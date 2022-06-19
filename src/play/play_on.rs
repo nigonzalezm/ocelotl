@@ -49,7 +49,10 @@ pub fn execute(connect: &Arc<Connect>, position: &Position, opt_see: Option<See>
                     }
                 }
             }
-            Command::PassBall => {
+            Command::PassBall { player }=> {
+                (0.0, 0.0, opt_command, None)
+            }
+            Command::Intercept => {
                 (0.0, 0.0, opt_command, None)
             }
         }

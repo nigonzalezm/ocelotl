@@ -7,10 +7,17 @@ pub enum PlayMode {
 }
 
 #[derive(Copy, Clone, Debug)]
+pub enum Selector {
+    Closest,
+    Farthest
+}
+
+#[derive(Copy, Clone, Debug)]
 pub enum Command {
     MoveTo { x: f64, y: f64 },
-    KickBallTo { x: f64, y: f64},
-    PassBall
+    KickBallTo { x: f64, y: f64 },
+    PassBall { player: Selector },
+    Intercept
 }
 
 #[derive(PartialEq, Copy, Clone, Debug)]

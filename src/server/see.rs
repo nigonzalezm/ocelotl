@@ -73,9 +73,15 @@ pub struct Ball {
     pub direction: i64
 }
 
+pub struct Player {
+    pub x: f64,
+    pub y: f64
+}
+
 pub struct See {
     pub flags: Vec<Flag>,
-    pub ball: Option<Ball>
+    pub ball: Option<Ball>,
+    pub players: Vec<Player>
 }
 
 fn sexp_as_int(element: &sexp::Sexp) -> i64 {
@@ -102,6 +108,7 @@ impl See {
     pub fn build(string: String) -> See {
         let mut flags: Vec<Flag> = Vec::new();
         let mut ball: Option<Ball> = None;
+        let mut players: Vec<Player> = Vec::new();
         let tree = sexp::parse(&string).unwrap();
         if let sexp::Sexp::List(elements) = tree {
             for element in &elements[2..] {
@@ -134,7 +141,7 @@ impl See {
                 }
             }
         }
-        See { flags, ball }
+        See { flags, ball, players }
     }
 }
 
