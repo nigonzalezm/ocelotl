@@ -27,7 +27,7 @@ pub fn execute(connect: &Arc<Connect>, position: &Position, opt_see: Option<See>
                 match opt_ball {
                     Some(ball) => {
                         let ball_position = position.position_from(ball.distance, ball.direction);
-                        if ball_position.distance_to(x, y) > 5.0 { 
+                        if ball_position.distance_to(x, y) > 3.0 { 
                             if ball.direction > 20 || ball.direction < -20 {
                                 connect.send(format!("(turn {})", ball.direction));
                                 (0.0, ball.direction as f64, opt_command, Some(Command::KickBallTo { x, y }))
@@ -45,7 +45,7 @@ pub fn execute(connect: &Arc<Connect>, position: &Position, opt_see: Option<See>
                     }
                     None => {
                         connect.send("(turn 30)".to_string());
-                        (0.0, 60.0, opt_command, Some(Command::KickBallTo { x, y }))
+                        (0.0, 30.0, opt_command, Some(Command::KickBallTo { x, y }))
                     }
                 }
             }
@@ -65,7 +65,7 @@ pub fn execute(connect: &Arc<Connect>, position: &Position, opt_see: Option<See>
             }
             None => {
                 connect.send("(turn 30)".to_string());
-                (0.0, 60.0, opt_command, None)
+                (0.0, 30.0, opt_command, None)
             }
         }
     }
