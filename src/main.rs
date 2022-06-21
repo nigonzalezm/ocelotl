@@ -23,6 +23,12 @@ struct Args {
     /// File to parse
     #[clap(short, long, parse(from_os_str))]
     file: Option<PathBuf>,
+    /// initial x position
+    #[clap(short, long)]
+    xpos: Option<f64>,
+    /// initial y position
+    #[clap(short, long)]
+    ypos: Option<f64>,
     /// Log sensors
     #[clap(short, long)]
     log: bool
@@ -62,6 +68,14 @@ fn main() {
                 }
             }
         }
+    }
+    if let Some(xpos) = args.xpos {
+        let mut game = game.lock().unwrap();
+        (*game).xpos = xpos;
+    }
+    if let Some(ypos) = args.ypos {
+        let mut game = game.lock().unwrap();
+        (*game).ypos = ypos;
     }
     let connect = Arc::new(Connect::connect());
     let _ = ServerParam::build(connect.receive());

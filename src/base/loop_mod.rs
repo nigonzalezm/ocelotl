@@ -43,13 +43,13 @@ pub fn loop_thread(connect: Arc<Connect>, game: Arc<Mutex<Game>>, player_types: 
                 }
             };
             position = _position;
-            let (play_mode, opt_command, strategy): (PlayMode, Option<Command>, Strategy) = {
+            let (play_mode, opt_command, strategy, xpos, ypos): (PlayMode, Option<Command>, Strategy, f64, f64) = {
                 let mut game = game.lock().unwrap();
-                ((*game).play_mode, (*game).commands.pop_front(), (*game).strategy)
+                ((*game).play_mode, (*game).commands.pop_front(), (*game).strategy, (*game).xpos, (*game).ypos)
             };
             match play_mode {
                 PlayMode::BeforeKickOff => {
-                    before_kick_off::execute(&connect, &position, see);
+                    before_kick_off::execute(&connect, &position, xpos, ypos);
                     last_dash_power = 0.0;
                     last_turn_moment = 0.0;
                     if let Some(command) = opt_command {

@@ -65,7 +65,7 @@ pub fn execute(connect: &Arc<Connect>, position: &Position, opt_see: Option<See>
                                 Selector::Closest => {
                                     match players.iter().min() {
                                         Some(closest) => {
-                                            connect.send(format!("(kick 25 {:.2})", closest.direction));
+                                            connect.send(format!("(kick 75 {:.2})", closest.direction));
                                             (0.0, 0.0, opt_command, None)
                                         },
                                         _ => {
@@ -76,7 +76,7 @@ pub fn execute(connect: &Arc<Connect>, position: &Position, opt_see: Option<See>
                                 _ => { // Farthest
                                     match players.iter().max() {
                                         Some(farthest) => {
-                                            connect.send(format!("(kick 25 {:.2})", farthest.direction));
+                                            connect.send(format!("(kick 75 {:.2})", farthest.direction));
                                             (0.0, 0.0, opt_command, None)
                                         },
                                         _ => {
@@ -97,7 +97,26 @@ pub fn execute(connect: &Arc<Connect>, position: &Position, opt_see: Option<See>
                 }
             }
             Command::Intercept => {
-                (0.0, 0.0, opt_command, None)
+                match opt_ball {
+                    Some(ball) => {
+                        if ball.direction > 20 || ball.direction < -20 {
+                            connect.send(format!("(turn {})", ball.direction));
+                            (0.0, ball.direction as f64, opt_command, Some(Command::Intercept))
+                        } else if ball.distance < player_type.kickable_margin {
+                            connect.send(format!("(kick 25 {:.2})", 0.0));
+                            (0.0, 0.0, opt_command, None)
+                        } else if ball.distance < 5.0 {
+                            connect.send("(dash 50 0)".to_string());
+                            (50.0, 0.0, opt_command, Some(Command::Intercept))
+                        } else {
+                            (0.0, 0.0, opt_command, Some(Command::Intercept))
+                        }
+                    }
+                    None => {
+                        connect.send("(turn 30)".to_string());
+                        (0.0, 30.0, opt_command, Some(Command::Intercept))
+                    }
+                }
             }
         }
     } else { // just look for ball

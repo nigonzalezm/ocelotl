@@ -30,7 +30,9 @@ pub struct Game {
     pub play_mode: PlayMode,
     pub simulation_mode: String,
     pub commands: VecDeque<Command>,
-    pub strategy: Strategy
+    pub strategy: Strategy,
+    pub xpos: f64,
+    pub ypos: f64
 }
 
 impl Game {
@@ -41,7 +43,9 @@ impl Game {
             play_mode, 
             simulation_mode,
             commands: VecDeque::<Command>::new(),
-            strategy: Strategy::Clear
+            strategy: Strategy::Clear,
+            xpos: -10.0,
+            ypos: 0.0
         }
     }
 }
