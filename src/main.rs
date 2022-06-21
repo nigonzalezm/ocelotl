@@ -8,7 +8,7 @@ use base::hear;
 use base::loop_mod;
 use base::update;
 use clap::Parser;
-use game::game::{Game, Command};
+use game::game::{Game, Command, Selector};
 use server::player_param::PlayerParam;
 use server::player_type::PlayerType;
 use server::server_param::ServerParam;
@@ -42,6 +42,14 @@ fn sexp_as_float(element: &sexp::Sexp) -> f64 {
     }
 }
 
+fn sexp_as_string(element: &sexp::Sexp) -> String {
+    if let sexp::Sexp::Atom(sexp::Atom::S(string)) = element {
+        string.to_string()
+    } else {
+        "".to_string()
+    }
+}
+
 fn main() {
     let args = Args::parse();
     let game = Arc::new(Mutex::new(Game::build()));
@@ -63,6 +71,23 @@ fn main() {
                             let y = sexp_as_float(&entry[2]);
                             let mut game = game.lock().unwrap();
                             (*game).commands.push_back(Command::KickBallTo { x, y });
+                        }
+                        if key == "pass_ball" {
+                            let selector = sexp_as_string(&entry[1]);
+                            match selector.as_ref() {
+                                "closest" => {
+                                    let mut game = game.lock().unwrap();
+                                    (*game).commands.push_back(Command::PassBall { player: Selector::Closest });
+                                }
+                                _ => {
+                                    let mut game = game.lock().unwrap();
+                                    (*game).commands.push_back(Command::PassBall { player: Selector::Farthest });
+                                }
+                            }
+                        }
+                        if key == "intercept" {
+                            let mut game = game.lock().unwrap();
+                            (*game).commands.push_back(Command::Intercept);
                         }
                     }
                 }
