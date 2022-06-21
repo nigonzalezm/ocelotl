@@ -22,7 +22,10 @@ use std::sync::mpsc::{Sender, Receiver};
 struct Args {
     /// File to parse
     #[clap(short, long, parse(from_os_str))]
-    file: Option<PathBuf>
+    file: Option<PathBuf>,
+    /// Log sensors
+    #[clap(short, long)]
+    log: bool
 }
 
 fn sexp_as_float(element: &sexp::Sexp) -> f64 {
@@ -76,6 +79,6 @@ fn main() {
     let connect_update = Arc::clone(&connect);
     update::update_thread(connect_update, loop_tx, hear_tx);
     hear::hear_thread(game, hear_rx);
-    let loop_handler = loop_mod::loop_thread(connect, game_reader, player_types, loop_rx);
+    let loop_handler = loop_mod::loop_thread(connect, game_reader, player_types, loop_rx, args.log);
     loop_handler.join();
 }

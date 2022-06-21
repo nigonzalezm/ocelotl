@@ -11,7 +11,7 @@ use std::thread;
 use std::thread::JoinHandle;
 use std::time::Duration;
 
-pub fn loop_thread(connect: Arc<Connect>, game: Arc<Mutex<Game>>, player_types: Vec<PlayerType>, loop_rx: Receiver<String>) -> JoinHandle<()> {
+pub fn loop_thread(connect: Arc<Connect>, game: Arc<Mutex<Game>>, player_types: Vec<PlayerType>, loop_rx: Receiver<String>, log: bool) -> JoinHandle<()> {
     let mut last_amount_of_speed = 0.0;
     let mut last_effort = 0.0;
     let mut last_dash_power = 0.0;
@@ -20,6 +20,9 @@ pub fn loop_thread(connect: Arc<Connect>, game: Arc<Mutex<Game>>, player_types: 
     thread::spawn(move || {
         loop {
             let message = loop_rx.recv().unwrap();
+            if log {
+                println!("{}", message);
+            }
             let sense_body = SenseBody::build(message);
             let default_player_type = &player_types[0];
             let mut velc = last_amount_of_speed + last_effort * default_player_type.dash_power_rate * last_dash_power;
@@ -29,6 +32,9 @@ pub fn loop_thread(connect: Arc<Connect>, game: Arc<Mutex<Game>>, player_types: 
             let turn = last_turn_moment / (1.0 + default_player_type.inertia_moment * velc);
             let (_position, see) = match loop_rx.recv_timeout(Duration::from_millis(25)) {
                 Ok(message) => {
+                    if log {
+                        println!("{}", message);
+                    }
                     let see = See::build(message);
                     (Position::localize(&position, velc, turn, &see.flags), Some(see))
                 }

@@ -1,12 +1,17 @@
 use super::super::base::connect::Connect;
-use super::super::game::game::Command;
+use super::super::game::game::*;
 use super::super::game::localization::Position;
 use super::super::server::player_type::PlayerType;
-use super::super::server::see::{Ball, See};
+use super::super::server::see::{ Ball, Player, See };
 use std::sync::Arc;
 
 pub fn execute(connect: &Arc<Connect>, position: &Position, opt_see: Option<See>, _game_time: i64, player_type: &PlayerType, opt_command: Option<Command>) -> (f64, f64, Option<Command>, Option<Command>) {
-    let opt_ball: Option<Ball> = opt_see.map(|see| see.ball).flatten();
+    let (opt_ball, players) = match opt_see {
+        Some(see) => {
+            (see.ball, see.players)
+        }
+        None => (None, Vec::<Player>::new())
+    };
     if let Some(command) = opt_command {
         match command {
             Command::MoveTo { x, y } => {
@@ -34,7 +39,7 @@ pub fn execute(connect: &Arc<Connect>, position: &Position, opt_see: Option<See>
                             } else if ball.distance < player_type.kickable_margin {
                                 let direction = position.direction_to(x, y);
                                 connect.send(format!("(kick 25 {:.2})", direction));
-                                (0.0, 0.0, opt_command, Some(Command::KickBallTo { x, y }))
+                                (0.0, 0.0, opt_command, None)
                             } else {
                                 connect.send("(dash 50 0)".to_string());
                                 (50.0, 0.0, opt_command, Some(Command::KickBallTo { x, y }))
@@ -49,8 +54,47 @@ pub fn execute(connect: &Arc<Connect>, position: &Position, opt_see: Option<See>
                     }
                 }
             }
-            Command::PassBall { player }=> {
-                (0.0, 0.0, opt_command, None)
+            Command::PassBall { player } => {
+                match opt_ball {
+                    Some(ball) => {
+                        if ball.direction > 20 || ball.direction < -20 {
+                            connect.send(format!("(turn {})", ball.direction));
+                            (0.0, ball.direction as f64, opt_command, Some(Command::PassBall { player }))
+                        } else if ball.distance < player_type.kickable_margin {
+                            match player {
+                                Selector::Closest => {
+                                    match players.iter().min() {
+                                        Some(closest) => {
+                                            connect.send(format!("(kick 25 {:.2})", closest.direction));
+                                            (0.0, 0.0, opt_command, None)
+                                        },
+                                        _ => {
+                                            (0.0, 0.0, opt_command, None)
+                                        }
+                                    }
+                                },
+                                _ => { // Farthest
+                                    match players.iter().max() {
+                                        Some(farthest) => {
+                                            connect.send(format!("(kick 25 {:.2})", farthest.direction));
+                                            (0.0, 0.0, opt_command, None)
+                                        },
+                                        _ => {
+                                            (0.0, 0.0, opt_command, None)
+                                        }
+                                    }
+                                }
+                            }
+                        } else {
+                            connect.send("(dash 50 0)".to_string());
+                            (50.0, 0.0, opt_command, Some(Command::PassBall { player }))
+                        }
+                    }
+                    None => {
+                        connect.send("(turn 30)".to_string());
+                        (0.0, 30.0, opt_command, Some(Command::PassBall { player }))
+                    }
+                }
             }
             Command::Intercept => {
                 (0.0, 0.0, opt_command, None)

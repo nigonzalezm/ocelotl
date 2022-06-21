@@ -1,6 +1,5 @@
-extern crate sexp;
-
 use phf::phf_map;
+use std::cmp::Ordering;
 
 static FLAGS: phf::Map<&'static str, (f64, f64)> = phf_map! {
     "f t 0"    => (  0.0f64, -39.0f64),
@@ -73,9 +72,28 @@ pub struct Ball {
     pub direction: i64
 }
 
+#[derive(Eq)]
 pub struct Player {
-    pub x: f64,
-    pub y: f64
+    pub distance: i64,
+    pub direction: i64
+}
+
+impl Ord for Player {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.distance.cmp(&other.distance)
+    }
+}
+
+impl PartialOrd for Player {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl PartialEq for Player {
+    fn eq(&self, other: &Self) -> bool {
+        self.distance == other.distance
+    }
 }
 
 pub struct See {
@@ -136,6 +154,11 @@ impl See {
                                 let direction = sexp_as_int(&entry[2]);
                                 ball = Some(Ball { distance, direction });
                             }
+                            if object_type == "p" && entry.len() > 2 {
+                                let distance = sexp_as_int(&entry[1]);
+                                let direction = sexp_as_int(&entry[2]);
+                                players.push(Player { distance, direction });
+                            }
                         }
                     }
                 }
@@ -159,10 +182,11 @@ mod tests {
 
     #[test]
     fn test_see_build() {
-        let message = "(see 0 ((f c) 10 0 0 0) ((f r t) 70.8 -29) ((f r b) 70.8 29) ((f g r b) 62.8 6) ((g r) 62.8 0) ((f g r t) 62.8 -6) ((f p r b) 50.4 24) ((f p r c) 46.1 0) ((f p r t) 50.4 -24) ((f r 0) 67.4 0) ((f r t 10) 68 -8) ((f r t 20) 70.1 -17) ((f r t 30) 73.7 -24) ((f r b 10) 68 8) ((f r b 20) 70.1 17) ((f r b 30) 73.7 24) ((b) 10 0 -0 0) ((l r) 62.8 90))";
+        let message = "(see 0 ((f c) 10 0 0 0) ((f r t) 70.8 -29) ((f r b) 70.8 29) ((f g r b) 62.8 6) ((g r) 62.8 0) ((f g r t) 62.8 -6) ((f p r b) 50.4 24) ((f p r c) 46.1 0) ((f p r t) 50.4 -24) ((f r 0) 67.4 0) ((f r t 10) 68 -8) ((f r t 20) 70.1 -17) ((f r t 30) 73.7 -24) ((f r b 10) 68 8) ((f r b 20) 70.1 17) ((f r b 30) 73.7 24) ((b) 10 0 -0 0) ((l r) 62.8 90) ((p \"ocelotl\" 1) 20.1 10 0 0 -155 -155) ((p \"ocelotl\" 2) 24.5 -12 0 -0 149 149))";
         let see = See::build(message.to_string());
         assert_eq!(15, see.flags.len());
         assert_eq!(true, see.ball.is_some());
+        assert_eq!(2, see.players.len());
     }
 
 }
