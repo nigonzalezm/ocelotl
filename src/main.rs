@@ -24,10 +24,10 @@ struct Args {
     #[clap(short, long, parse(from_os_str))]
     file: Option<PathBuf>,
     /// initial x position
-    #[clap(short, long)]
+    #[clap(short, long, allow_hyphen_values = true)]
     xpos: Option<f64>,
     /// initial y position
-    #[clap(short, long)]
+    #[clap(short, long, allow_hyphen_values = true)]
     ypos: Option<f64>,
     /// Log sensors
     #[clap(short, long)]
