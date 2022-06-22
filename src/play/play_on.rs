@@ -57,10 +57,7 @@ pub fn execute(connect: &Arc<Connect>, position: &Position, opt_see: Option<See>
             Command::PassBall { player } => {
                 match opt_ball {
                     Some(ball) => {
-                        if ball.direction > 20 || ball.direction < -20 {
-                            connect.send(format!("(turn {})", ball.direction));
-                            (0.0, ball.direction as f64, opt_command, Some(Command::PassBall { player }))
-                        } else if ball.distance < player_type.kickable_margin {
+                        if ball.distance < player_type.kickable_margin {
                             match player {
                                 Selector::Closest => {
                                     match players.iter().min() {
@@ -69,7 +66,8 @@ pub fn execute(connect: &Arc<Connect>, position: &Position, opt_see: Option<See>
                                             (0.0, 0.0, opt_command, None)
                                         },
                                         _ => {
-                                            (0.0, 0.0, opt_command, None)
+                                            connect.send("(turn 30)".to_string());
+                                            (0.0, 30.0, opt_command, Some(Command::PassBall { player }))
                                         }
                                     }
                                 },
@@ -80,11 +78,15 @@ pub fn execute(connect: &Arc<Connect>, position: &Position, opt_see: Option<See>
                                             (0.0, 0.0, opt_command, None)
                                         },
                                         _ => {
-                                            (0.0, 0.0, opt_command, None)
+                                            connect.send("(turn 30)".to_string());
+                                            (0.0, 30.0, opt_command, Some(Command::PassBall { player }))
                                         }
                                     }
                                 }
                             }
+                        } else if ball.direction > 20 || ball.direction < -20 {
+                            connect.send(format!("(turn {})", ball.direction));
+                            (0.0, ball.direction as f64, opt_command, Some(Command::PassBall { player }))
                         } else {
                             connect.send("(dash 50 0)".to_string());
                             (50.0, 0.0, opt_command, Some(Command::PassBall { player }))
