@@ -5,12 +5,13 @@ use super::super::server::player_type::PlayerType;
 use super::super::server::see::{ Ball, Player, See };
 use std::sync::Arc;
 
-pub fn execute(connect: &Arc<Connect>, position: &Position, opt_see: Option<See>, _game_time: i64, player_type: &PlayerType, opt_command: Option<Command>) -> (f64, f64, Option<Command>, Option<Command>) {
+pub fn execute(connect: &Arc<Connect>, position: &Position, opt_see: &Option<See>, _game_time: i64, player_type: &PlayerType, opt_command: Option<Command>) -> (f64, f64, Option<Command>, Option<Command>) {
+    let empty = Vec::<Player>::new();
     let (opt_ball, players) = match opt_see {
         Some(see) => {
-            (see.ball, see.players)
+            (&see.ball, &see.players)
         }
-        None => (None, Vec::<Player>::new())
+        None => (&None, &empty)
     };
     if let Some(command) = opt_command {
         match command {

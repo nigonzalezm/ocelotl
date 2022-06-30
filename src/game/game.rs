@@ -1,4 +1,5 @@
 use std::collections::VecDeque;
+use super::super::server::see::See;
 
 #[derive(Copy, Clone)]
 pub enum PlayMode {
@@ -32,7 +33,8 @@ pub struct Game {
     pub commands: VecDeque<Command>,
     pub strategy: Strategy,
     pub xpos: f64,
-    pub ypos: f64
+    pub ypos: f64,
+    pub last_see: Option<See>
 }
 
 impl Game {
@@ -45,7 +47,8 @@ impl Game {
             commands: VecDeque::<Command>::new(),
             strategy: Strategy::Clear,
             xpos: -10.0,
-            ypos: 0.0
+            ypos: 0.0,
+            last_see: None
         }
     }
 }
