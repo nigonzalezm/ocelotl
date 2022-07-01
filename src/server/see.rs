@@ -67,30 +67,30 @@ pub struct Flag {
 }
 
 #[derive(Debug)]
-pub struct Ball {
+pub struct BallRaw {
     pub distance: f64,
     pub direction: i64
 }
 
 #[derive(Eq)]
-pub struct Player {
+pub struct PlayerRaw {
     pub distance: i64,
     pub direction: i64
 }
 
-impl Ord for Player {
+impl Ord for PlayerRaw {
     fn cmp(&self, other: &Self) -> Ordering {
         self.distance.cmp(&other.distance)
     }
 }
 
-impl PartialOrd for Player {
+impl PartialOrd for PlayerRaw {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
     }
 }
 
-impl PartialEq for Player {
+impl PartialEq for PlayerRaw {
     fn eq(&self, other: &Self) -> bool {
         self.distance == other.distance
     }
@@ -98,8 +98,8 @@ impl PartialEq for Player {
 
 pub struct See {
     pub flags: Vec<Flag>,
-    pub ball: Option<Ball>,
-    pub players: Vec<Player>
+    pub ball: Option<BallRaw>,
+    pub players: Vec<PlayerRaw>
 }
 
 fn sexp_as_int(element: &sexp::Sexp) -> i64 {
@@ -125,8 +125,8 @@ impl See {
     }
     pub fn build(string: String) -> See {
         let mut flags: Vec<Flag> = Vec::new();
-        let mut ball: Option<Ball> = None;
-        let mut players: Vec<Player> = Vec::new();
+        let mut ball: Option<BallRaw> = None;
+        let mut players: Vec<PlayerRaw> = Vec::new();
         let tree = sexp::parse(&string).unwrap();
         if let sexp::Sexp::List(elements) = tree {
             for element in &elements[2..] {
@@ -152,12 +152,12 @@ impl See {
                             if object_type == "b" && entry.len() > 2 {
                                 let distance = sexp_as_float(&entry[1]);
                                 let direction = sexp_as_int(&entry[2]);
-                                ball = Some(Ball { distance, direction });
+                                ball = Some(BallRaw { distance, direction });
                             }
                             if object_type == "p" && entry.len() > 2 {
                                 let distance = sexp_as_int(&entry[1]);
                                 let direction = sexp_as_int(&entry[2]);
-                                players.push(Player { distance, direction });
+                                players.push(PlayerRaw { distance, direction });
                             }
                         }
                     }

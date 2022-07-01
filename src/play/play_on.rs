@@ -2,11 +2,11 @@ use super::super::base::connect::Connect;
 use super::super::game::game::*;
 use super::super::game::localization::Position;
 use super::super::server::player_type::PlayerType;
-use super::super::server::see::{ Ball, Player, See };
+use super::super::server::see::{ BallRaw, PlayerRaw, See };
 use std::sync::Arc;
 
 pub fn execute(connect: &Arc<Connect>, position: &Position, opt_see: &Option<See>, _game_time: i64, player_type: &PlayerType, opt_command: Option<Command>) -> (f64, f64, Option<Command>, Option<Command>) {
-    let empty = Vec::<Player>::new();
+    let empty = Vec::<PlayerRaw>::new();
     let (opt_ball, players) = match opt_see {
         Some(see) => {
             (&see.ball, &see.players)
