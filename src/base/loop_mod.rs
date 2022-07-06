@@ -12,25 +12,22 @@ use std::thread::JoinHandle;
 use std::time::Duration;
 
 pub fn loop_thread(connect: Arc<Connect>, game: Arc<Mutex<Game>>, player_types: Vec<PlayerType>, loop_rx: Receiver<String>, log: bool) -> JoinHandle<()> {
-    let mut last_amount_of_speed = 0.0;
-    let mut last_effort = 0.0;
-    let mut last_dash_power = 0.0;
-    let mut last_turn_moment = 0.0;
     let mut position = Position::create(0.0, 0.0, 0.0);
     let mut opt_last_see: Option<See> = None;
+    let mut sense_body = SenseBody::build();
     thread::spawn(move || {
         loop {
             let message = loop_rx.recv().unwrap();
             if log {
                 println!("{}", message);
             }
-            let sense_body = SenseBody::build(message);
+            sense_body = sense_body.update(message);
             let default_player_type = &player_types[0];
-            let mut velc = last_amount_of_speed + last_effort * default_player_type.dash_power_rate * last_dash_power;
+            let mut velc = sense_body.last_amount_of_speed + sense_body.last_effort * default_player_type.dash_power_rate * sense_body.last_dash_power;
             if velc > default_player_type.player_speed_max {
                 velc = default_player_type.player_speed_max;
             }
-            let turn = last_turn_moment / (1.0 + default_player_type.inertia_moment * velc);
+            let turn = sense_body.last_turn_moment / (1.0 + default_player_type.inertia_moment * velc);
             let (_position, mut opt_see) = match loop_rx.recv_timeout(Duration::from_millis(25)) {
                 Ok(message) => {
                     if log {
@@ -64,8 +61,8 @@ pub fn loop_thread(connect: Arc<Connect>, game: Arc<Mutex<Game>>, player_types: 
             match play_mode {
                 PlayMode::BeforeKickOff => {
                     before_kick_off::execute(&connect, &position, xpos, ypos);
-                    last_dash_power = 0.0;
-                    last_turn_moment = 0.0;
+                    sense_body.last_dash_power = 0.0;
+                    sense_body.last_turn_moment = 0.0;
                     if let Some(command) = opt_command {
                         let mut game = game.lock().unwrap();
                         (*game).commands.push_front(command);
@@ -73,8 +70,8 @@ pub fn loop_thread(connect: Arc<Connect>, game: Arc<Mutex<Game>>, player_types: 
                 },
                 PlayMode::PlayOn => {
                     let (dash, turn, prev_command, next_command) = play_on::execute(&connect, &position, &opt_see, sense_body.game_time, default_player_type, opt_command);
-                    last_dash_power = dash;
-                    last_turn_moment = turn;
+                    sense_body.last_dash_power = dash;
+                    sense_body.last_turn_moment = turn;
                     if let Some(command) = next_command {
                         let mut game = game.lock().unwrap();
                         (*game).commands.push_front(command);
@@ -88,8 +85,8 @@ pub fn loop_thread(connect: Arc<Connect>, game: Arc<Mutex<Game>>, player_types: 
                     }
                 }
             }
-            last_amount_of_speed = sense_body.amount_of_speed;
-            last_effort = sense_body.effort;
+            sense_body.last_amount_of_speed = sense_body.amount_of_speed;
+            sense_body.last_effort = sense_body.effort;
             opt_last_see = opt_see;
             let simulation_mode: String = {
                 let game = game.lock().unwrap();
