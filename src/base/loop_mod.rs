@@ -50,7 +50,7 @@ pub fn loop_thread(connect: Arc<Connect>, game: Arc<Mutex<Game>>, player_types: 
                     }
                 },
                 PlayMode::PlayOn => {
-                    /*let (dash, turn, prev_command, next_command) = play_on::execute(&connect, &position, &opt_see, sense_body.game_time, default_player_type, opt_command);
+                    let (dash, turn, prev_command, next_command) = play_on::execute(&connect, &world, default_player_type, opt_command);
                     sense_body.last_dash_power = dash;
                     sense_body.last_turn_moment = turn;
                     if let Some(command) = next_command {
@@ -63,7 +63,7 @@ pub fn loop_thread(connect: Arc<Connect>, game: Arc<Mutex<Game>>, player_types: 
                                 (*game).commands.push_back(command);
                             }
                         }
-                    }*/
+                    }
                 }
             }
             sense_body.last_amount_of_speed = sense_body.amount_of_speed;
