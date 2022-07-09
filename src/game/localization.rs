@@ -21,7 +21,7 @@ fn angle(x0: f64, y0: f64, x1: f64, y1: f64, offset: f64) -> f64 {
 }
 
 // based on https://www3.nd.edu/~cpoellab/teaching/cse40815/Chapter10.pdf
-fn triangulate(flags: Vec<Flag>) -> Option<Position> {
+fn triangulate(flags: &Vec<Flag>) -> Option<Position> {
     let flag0 = flags.get(0).unwrap();
     let mut a_x_1: Vec<f64> = Vec::new();
     let mut a_x_2: Vec<f64> = Vec::new();
@@ -40,7 +40,7 @@ fn triangulate(flags: Vec<Flag>) -> Option<Position> {
         let y = *position.get(1).unwrap();
         let mut uxs = 0.0;
         let mut uys = 0.0;
-        for flag in &flags {
+        for flag in flags {
             let direction = angle(x, y, flag.x, flag.y, 0.0).to_radians();
             uxs += direction.cos();
             uys += direction.sin();
@@ -80,7 +80,12 @@ impl Position {
     pub fn direction_to(&self, x: f64, y: f64) -> f64 {
         angle(self.x, self.y, x, y, self.body)
     }
-    pub fn localize(position: &Position, velc: f64, turn: f64, flags: Vec<Flag>) -> Position {
+    pub fn position_from(&self, distance: f64, direction: i64) -> Position {
+        let x = self.x + distance * (direction as f64).to_radians().cos();
+        let y = self.y + distance * (direction as f64).to_radians().sin();
+        Position { x, y, body: 0.0 }
+    }
+    pub fn localize(position: &Position, velc: f64, turn: f64, flags: &Vec<Flag>) -> Position {
         if flags.len() > 2 {
             if let Some(position) = triangulate(flags) {
                 position
@@ -104,7 +109,7 @@ mod tests {
         let message = "(see 0 ((f c) 10 0 0 0) ((f r t) 70.8 -29) ((f r b) 70.8 29) ((f g r b) 62.8 6) ((g r) 62.8 0) ((f g r t) 62.8 -6) ((f p r b) 50.4 24) ((f p r c) 46.1 0) ((f p r t) 50.4 -24) ((f r 0) 67.4 0) ((f r t 10) 68 -8) ((f r t 20) 70.1 -17) ((f r t 30) 73.7 -24) ((f r b 10) 68 8) ((f r b 20) 70.1 17) ((f r b 30) 73.7 24) ((b) 10 0 -0 0) ((l r) 62.8 90))";
         let see = See::build(message.to_string());
         let previous = Position { x: -1.0, y: -1.0, body: -1.0 };
-        let position = Position::localize(&previous, 0.0, 0.0, see.flags);
+        let position = Position::localize(&previous, 0.0, 0.0, &see.flags);
         assert!(position.x > -12.0 && position.x < -8.0);
         assert!(position.y > -1.0 && position.y < 1.0);
         assert_eq!(position.body, 0.0);
@@ -112,7 +117,7 @@ mod tests {
 
     fn test_localize_by_actions() {
         let previous = Position { x: -1.0, y: -1.0, body: -1.0 };
-        let position = Position::localize(&previous, 1.0, 10.0, Vec::<Flag>::new());
+        let position = Position::localize(&previous, 1.0, 10.0, &Vec::<Flag>::new());
         assert_eq!(position.x, 0.0);
         assert_eq!(position.y, 0.0);
         assert_eq!(position.body, 10.0);

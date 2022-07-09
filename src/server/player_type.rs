@@ -3,7 +3,9 @@ extern crate sexp;
 pub struct PlayerType {
     pub player_speed_max: f64,
     pub dash_power_rate: f64,
-    pub inertia_moment: f64
+    pub inertia_moment: f64,
+    pub kick_power_rate: f64,
+    pub kickable_margin: f64
 }
 
 impl PlayerType {
@@ -11,6 +13,8 @@ impl PlayerType {
         let mut player_speed_max = 1.05;
         let mut dash_power_rate = 0.006;
         let mut inertia_moment = 5.0;
+        let mut kick_power_rate = 0.027;
+        let mut kickable_margin = 0.7;
         let tree = sexp::parse(&string).unwrap();
         if let sexp::Sexp::List(elements) = tree {
             for element in &elements[1..] {
@@ -20,16 +24,31 @@ impl PlayerType {
                             if let sexp::Sexp::Atom(sexp::Atom::F(value)) = entry[1] {
                                 player_speed_max = value;
                             }
+                            continue;
                         }
                         if key == "dash_power_rate" {
                             if let sexp::Sexp::Atom(sexp::Atom::F(value)) = entry[1] {
                                 dash_power_rate = value;
                             }
+                            continue;
                         }
                         if key == "inertia_moment" {
                             if let sexp::Sexp::Atom(sexp::Atom::F(value)) = entry[1] {
                                 inertia_moment = value;
                             }
+                            continue;
+                        }
+                        if key == "kick_power_rate" {
+                            if let sexp::Sexp::Atom(sexp::Atom::F(value)) = entry[1] {
+                                kick_power_rate = value;
+                            }
+                            continue;
+                        }
+                        if key == "kickable_margin" {
+                            if let sexp::Sexp::Atom(sexp::Atom::F(value)) = entry[1] {
+                                kickable_margin = value;
+                            }
+                            continue;
                         }
                     }
                 }
@@ -38,7 +57,9 @@ impl PlayerType {
         PlayerType { 
             player_speed_max,
             dash_power_rate,
-            inertia_moment
+            inertia_moment,
+            kick_power_rate,
+            kickable_margin
         }
     }
 }
@@ -55,6 +76,8 @@ mod tests {
         assert_eq!(player_type.player_speed_max, 1.05);
         assert_eq!(player_type.dash_power_rate, 0.00530644);
         assert_eq!(player_type.inertia_moment, 4.38719);
+        assert_eq!(player_type.kick_power_rate, 0.027);
+        assert_eq!(player_type.kickable_margin, 0.702801);
     }
 
 }

@@ -9,3 +9,4 @@ edition = "2021"
 phf = { version = "0.10", features = ["macros"] }
 sexp = "1.1.4"
 nalgebra = "0.30.1"
+clap = { version = "3.2.5", features = ["derive"] }
