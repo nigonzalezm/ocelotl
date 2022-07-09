@@ -47,8 +47,8 @@ impl World {
     pub fn update_with_see(mut self, sense_body: &SenseBody, player_type: &PlayerType, see: See) -> Self {
         let (velc, turn) = get_velc_and_turn(sense_body, player_type);
         self.position = Position::localize(&self.position, velc, turn, &see.flags);
-        self.opt_ball = see.ball.map(|ball| Ball { position: self.position.position_from(ball.distance, ball.direction), ttl: 0 });
-        self.players = see.players.iter().map(|player| Player {number: None, position: self.position.position_from(player.distance as f64, player.direction), ttl: 0 }).collect();
+        self.opt_ball = see.ball.map(|ball| Ball { position: self.position.position_from(ball.distance, (self.position.body as i64) + ball.direction), ttl: 0 });
+        self.players = see.players.iter().map(|player| Player {number: None, position: self.position.position_from(player.distance as f64, (self.position.body as i64) + player.direction), ttl: 0 }).collect();
         self
     }
     pub fn closest(&self) -> Option<&Player> {

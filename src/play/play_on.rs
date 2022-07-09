@@ -35,7 +35,7 @@ pub fn execute(connect: &Arc<Connect>, world: &World, player_type: &PlayerType, 
                             } else if ball_distance < player_type.kickable_margin {
                                 let direction = world.position.direction_to(x, y);
                                 connect.send(format!("(kick 25 {:.2})", direction));
-                                (0.0, 0.0, opt_command, None)
+                                (0.0, 0.0, opt_command, Some(Command::KickBallTo { x, y }))
                             } else {
                                 connect.send("(dash 50 0)".to_string());
                                 (50.0, 0.0, opt_command, Some(Command::KickBallTo { x, y }))
