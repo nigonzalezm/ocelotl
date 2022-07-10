@@ -40,15 +40,48 @@ impl World {
     pub fn update(mut self, sense_body: &SenseBody, player_type: &PlayerType) -> Self {
         let (velc, turn) = get_velc_and_turn(sense_body, player_type);
         self.position = Position::localize(&self.position, velc, turn, &Vec::<Flag>::new());
-        self.opt_ball = None;
-        self.players = Vec::new();
+        self.opt_ball = match self.opt_ball {
+            Some(mut ball) if ball.ttl < 5 => {
+                ball.ttl = ball.ttl + 1;
+                Some(ball)
+            },
+            _ => None
+        };
+        for player in self.players.iter_mut() {
+            player.ttl = player.ttl + 1;
+        }
+        self.players = self.players.into_iter().filter(|player| player.ttl < 5).collect();
         self
     }
     pub fn update_with_see(mut self, sense_body: &SenseBody, player_type: &PlayerType, see: See) -> Self {
         let (velc, turn) = get_velc_and_turn(sense_body, player_type);
         self.position = Position::localize(&self.position, velc, turn, &see.flags);
-        self.opt_ball = see.ball.map(|ball| Ball { position: self.position.position_from(ball.distance, (self.position.body as i64) + ball.direction), ttl: 0 });
-        self.players = see.players.iter().map(|player| Player {number: None, position: self.position.position_from(player.distance as f64, (self.position.body as i64) + player.direction), ttl: 0 }).collect();
+        self.opt_ball = match see.ball {
+            Some(ball) => Some(Ball { position: self.position.position_from(ball.distance, (self.position.body as i64) + ball.direction), ttl: 0 }),
+            None => match self.opt_ball {
+                Some(mut ball) if ball.ttl < 5 => {
+                    let ball_direction = self.position.direction_to(ball.position.x, ball.position.y) as i64;
+                    if ball_direction > 30 || ball_direction < -30 {
+                        ball.ttl = ball.ttl + 1;
+                        Some(ball)
+                    } else {
+                        None
+                    }
+                },
+                _ => None
+            }
+        };
+        for player in self.players.iter_mut() {
+            let player_direction = self.position.direction_to(player.position.x, player.position.y) as i64;
+            if player_direction > 30 || player_direction < -30 {
+                player.ttl = player.ttl + 1;
+            } else {
+                player.ttl = 5;
+            }
+        }
+        let mut new_players: Vec<Player> = see.players.iter().map(|player| Player {number: None, position: self.position.position_from(player.distance as f64, (self.position.body as i64) + player.direction), ttl: 0 }).collect();
+        self.players.append(&mut new_players);
+        self.players = self.players.into_iter().filter(|player| player.ttl < 5).collect();
         self
     }
     pub fn closest(&self) -> Option<&Player> {

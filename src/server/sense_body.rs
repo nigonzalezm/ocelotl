@@ -1,10 +1,9 @@
-extern crate sexp;
-
 pub struct SenseBody {
     pub game_time: i64,
     pub view_mode: String,
     pub effort: f64,
     pub amount_of_speed: f64,
+    pub head_angle: i64,
     pub last_effort: f64,
     pub last_amount_of_speed: f64,
     pub last_dash_power: f64,
@@ -26,6 +25,7 @@ impl SenseBody {
             view_mode: String::from(""),
             effort: 0.0,
             amount_of_speed: 0.0,
+            head_angle: 0,
             last_effort: 0.0,
             last_amount_of_speed: 0.0,
             last_dash_power: 0.0,
@@ -49,6 +49,10 @@ impl SenseBody {
                             self.effort = sexp_as_float(&entry[2]);
                         } else if key == "speed" {
                             self.amount_of_speed = sexp_as_float(&entry[1]);
+                        } else if key == "head_angle" {
+                            if let sexp::Sexp::Atom(sexp::Atom::I(value)) = entry[1] {
+                                self.head_angle = value;
+                            }
                         }
                     }
                 }
@@ -72,6 +76,7 @@ mod tests {
         assert_eq!(sense_body.view_mode, "high");
         assert_eq!(sense_body.effort, 1.0);
         assert_eq!(sense_body.amount_of_speed, 0.0);
+        assert_eq!(sense_body.head_angle, 0);
     }
 
 }
