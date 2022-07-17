@@ -2,6 +2,7 @@ use super::super::base::connect::Connect;
 use super::super::game::game::*;
 use super::super::game::localization::Position;
 use crate::game::world::World;
+use crate::play::actions::*;
 use super::super::server::player_type::PlayerType;
 use super::super::server::see::{ BallRaw, PlayerRaw, See };
 use std::sync::Arc;
@@ -24,77 +25,12 @@ pub fn execute(connect: &Arc<Connect>, world: &World, player_type: &PlayerType, 
                 }
             }
             Command::KickBallTo { x, y } => {
-                match &world.opt_ball {
-                    Some(ball) => {
-                        let ball_direction = world.position.direction_to(ball.position.x, ball.position.y) as i64;
-                        let ball_distance = world.position.distance_to(ball.position.x, ball.position.y);
-                        if ball.position.distance_to(x, y) > 3.0 { 
-                            if ball_direction > 20 || ball_direction < -20 {
-                                connect.send(format!("(turn {})", ball_direction));
-                                (0.0, ball_direction as f64, opt_command, Some(Command::KickBallTo { x, y }))
-                            } else if ball_distance < player_type.kickable_margin {
-                                let direction = world.position.direction_to(x, y);
-                                connect.send(format!("(kick 25 {:.2})", direction));
-                                (0.0, 0.0, opt_command, Some(Command::KickBallTo { x, y }))
-                            } else {
-                                connect.send("(dash 50 0)".to_string());
-                                (50.0, 0.0, opt_command, Some(Command::KickBallTo { x, y }))
-                            }
-                        } else {
-                            (0.0, 0.0, opt_command, None)
-                        }
-                    }
-                    None => {
-                        connect.send("(turn 30)".to_string());
-                        (0.0, 30.0, opt_command, Some(Command::KickBallTo { x, y }))
-                    }
-                }
+                let (dash, turn, next_command) = kick_ball_to::kick_ball_to(connect, world, player_type, x, y);
+                (dash, turn, opt_command, next_command)
             }
             Command::PassBall { player } => {
-                match &world.opt_ball {
-                    Some(ball) => {
-                        let ball_direction = world.position.direction_to(ball.position.x, ball.position.y) as i64;
-                        let ball_distance = world.position.distance_to(ball.position.x, ball.position.y);
-                        if ball_distance < player_type.kickable_margin {
-                            match player {
-                                Selector::Closest => {
-                                    match world.closest() {
-                                        Some(closest) => {
-                                            connect.send(format!("(kick 75 {:.2})", world.position.direction_to(closest.position.x, closest.position.y)));
-                                            (0.0, 0.0, opt_command, None)
-                                        },
-                                        _ => {
-                                            connect.send("(turn 30)".to_string());
-                                            (0.0, 30.0, opt_command, Some(Command::PassBall { player }))
-                                        }
-                                    }
-                                },
-                                _ => { // Farthest
-                                    match world.farthest() {
-                                        Some(farthest) => {
-                                            connect.send(format!("(kick 75 {:.2})", world.position.direction_to(farthest.position.x, farthest.position.y)));
-                                            (0.0, 0.0, opt_command, None)
-                                        },
-                                        _ => {
-                                            connect.send("(turn 30)".to_string());
-                                            (0.0, 30.0, opt_command, Some(Command::PassBall { player }))
-                                        }
-                                    }
-                                }
-                            }
-                        } else if ball_direction > 20 || ball_direction < -20 {
-                            connect.send(format!("(turn {})", ball_direction));
-                            (0.0, ball_direction as f64, opt_command, Some(Command::PassBall { player }))
-                        } else {
-                            connect.send("(dash 50 0)".to_string());
-                            (50.0, 0.0, opt_command, Some(Command::PassBall { player }))
-                        }
-                    }
-                    None => {
-                        connect.send("(turn 30)".to_string());
-                        (0.0, 30.0, opt_command, Some(Command::PassBall { player }))
-                    }
-                }
+                let (dash, turn, next_command) = pass_ball::pass_ball(connect, world, player_type, player);
+                (dash, turn, opt_command, next_command)
             }
             Command::Intercept => {
                 match &world.opt_ball {
