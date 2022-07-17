@@ -1,6 +1,7 @@
 extern crate sexp;
 
 pub struct ServerParam {
+    pub ball_decay: f64,
     pub quantize_step_l: f64,
     pub say_msg_size: i64,
     pub simulator_step: i64
@@ -8,6 +9,7 @@ pub struct ServerParam {
 
 impl ServerParam {
     pub fn build(string: String) -> ServerParam {
+        let mut ball_decay = 0.94;
         let mut quantize_step_l = 0.01;
         let mut say_msg_size = 10;
         let mut simulator_step = 100;
@@ -16,6 +18,11 @@ impl ServerParam {
             for element in &elements[1..] {
                 if let sexp::Sexp::List(entry) = element {
                     if let sexp::Sexp::Atom(sexp::Atom::S(ref key)) = entry[0] {
+                        if key == "ball_decay" {
+                            if let sexp::Sexp::Atom(sexp::Atom::F(value)) = entry[1] {
+                                ball_decay = value;
+                            }
+                        }
                         if key == "quantize_step_l" {
                             if let sexp::Sexp::Atom(sexp::Atom::F(value)) = entry[1] {
                                 quantize_step_l = value;
@@ -36,6 +43,7 @@ impl ServerParam {
             }
         }
         ServerParam { 
+            ball_decay,
             quantize_step_l,
             say_msg_size, 
             simulator_step 

@@ -1,10 +1,24 @@
 use crate::base::connect::Connect;
 use crate::game::game::{Command, Selector};
-use crate::game::world::World;
+use crate::game::world::{Player, World};
 use crate::server::player_type::PlayerType;
+use crate::server::server_param::ServerParam;
 use std::sync::Arc;
 
-pub fn pass_ball(connect: &Arc<Connect>, world: &World, player_type: &PlayerType, player: Selector) -> (f64, f64, Option<Command>) {
+fn get_kick_power(server_param: &ServerParam, player_type: &PlayerType, distance: f64, speed: f64) -> i64 {
+    for i in 1..10 {
+        let power = 1 * 10;
+        let effective_power = (power as f64) * player_type.kick_power_rate;
+        let cycles = ((speed / effective_power).ln() / server_param.ball_decay.ln()).floor() as i32;
+        let dx = effective_power * (server_param.ball_decay.powi(cycles + 1) - 1.0) / (server_param.ball_decay - 1.0);
+        if dx > distance {
+            return power;
+        }
+    }
+    75
+}
+
+pub fn pass_ball(connect: &Arc<Connect>, world: &World, server_param: &ServerParam, player_type: &PlayerType, player: Selector) -> (f64, f64, Option<Command>) {
     match &world.opt_ball {
         Some(ball) => {
             let ball_direction = world.position.direction_to(ball.position.x, ball.position.y) as i64;
@@ -14,7 +28,9 @@ pub fn pass_ball(connect: &Arc<Connect>, world: &World, player_type: &PlayerType
                     Selector::Closest => {
                         match world.closest() {
                             Some(closest) => {
-                                connect.send(format!("(kick 75 {:.2})", world.position.direction_to(closest.position.x, closest.position.y)));
+                                let distance = world.position.distance_to(closest.position.x, closest.position.y);
+                                let power = get_kick_power(server_param, player_type, distance, 0.2);
+                                connect.send(format!("(kick {} {:.2})", power, world.position.direction_to(closest.position.x, closest.position.y)));
                                 (0.0, 0.0, None)
                             },
                             _ => {
@@ -26,7 +42,9 @@ pub fn pass_ball(connect: &Arc<Connect>, world: &World, player_type: &PlayerType
                     _ => { // Farthest
                         match world.farthest() {
                             Some(farthest) => {
-                                connect.send(format!("(kick 75 {:.2})", world.position.direction_to(farthest.position.x, farthest.position.y)));
+                                let distance = world.position.distance_to(farthest.position.x, farthest.position.y);
+                                let power = get_kick_power(server_param, player_type, distance, 0.2);
+                                connect.send(format!("(kick {} {:.2})", power, world.position.direction_to(farthest.position.x, farthest.position.y)));
                                 (0.0, 0.0, None)
                             },
                             _ => {

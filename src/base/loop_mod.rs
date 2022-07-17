@@ -6,13 +6,14 @@ use super::super::play::*;
 use super::super::server::player_type::PlayerType;
 use super::super::server::see::{Flag, See};
 use super::super::server::sense_body::SenseBody;
+use crate::server::server_param::ServerParam;
 use std::sync::{Arc, Mutex};
 use std::sync::mpsc::Receiver;
 use std::thread;
 use std::thread::JoinHandle;
 use std::time::Duration;
 
-pub fn loop_thread(connect: Arc<Connect>, game: Arc<Mutex<Game>>, player_types: Vec<PlayerType>, loop_rx: Receiver<String>, log: bool) -> JoinHandle<()> {
+pub fn loop_thread(connect: Arc<Connect>, game: Arc<Mutex<Game>>, server_param: ServerParam, player_types: Vec<PlayerType>, loop_rx: Receiver<String>, log: bool) -> JoinHandle<()> {
     let mut sense_body = SenseBody::build();
     let mut world = World::build();
     thread::spawn(move || {
@@ -50,7 +51,7 @@ pub fn loop_thread(connect: Arc<Connect>, game: Arc<Mutex<Game>>, player_types: 
                     }
                 },
                 PlayMode::PlayOn => {
-                    let (dash, turn, prev_command, next_command) = play_on::execute(&connect, &world, default_player_type, opt_command);
+                    let (dash, turn, prev_command, next_command) = play_on::execute(&connect, &world, &server_param, default_player_type, opt_command);
                     sense_body.last_dash_power = dash;
                     sense_body.last_turn_moment = turn;
                     if let Some(command) = next_command {

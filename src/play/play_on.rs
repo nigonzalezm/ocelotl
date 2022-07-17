@@ -5,9 +5,10 @@ use crate::game::world::World;
 use crate::play::actions::*;
 use super::super::server::player_type::PlayerType;
 use super::super::server::see::{ BallRaw, PlayerRaw, See };
+use crate::server::server_param::ServerParam;
 use std::sync::Arc;
 
-pub fn execute(connect: &Arc<Connect>, world: &World, player_type: &PlayerType, opt_command: Option<Command>) -> (f64, f64, Option<Command>, Option<Command>) {
+pub fn execute(connect: &Arc<Connect>, world: &World, server_param: &ServerParam, player_type: &PlayerType, opt_command: Option<Command>) -> (f64, f64, Option<Command>, Option<Command>) {
     if let Some(command) = opt_command {
         match command {
             Command::MoveTo { x, y } => {
@@ -29,7 +30,7 @@ pub fn execute(connect: &Arc<Connect>, world: &World, player_type: &PlayerType, 
                 (dash, turn, opt_command, next_command)
             }
             Command::PassBall { player } => {
-                let (dash, turn, next_command) = pass_ball::pass_ball(connect, world, player_type, player);
+                let (dash, turn, next_command) = pass_ball::pass_ball(connect, world, server_param, player_type, player);
                 (dash, turn, opt_command, next_command)
             }
             Command::Intercept => {
